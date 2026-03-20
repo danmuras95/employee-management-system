@@ -36,7 +36,7 @@ public class EmployeeResponseDTO {
     public String getFullName() {return fullName;}
     public String getEmail() {return email;}
     public String getRole() {return role;}
-    public Integer getDepartmentIdId() {return departmentId;}
+    public Integer getDepartmentId() {return departmentId;}
     public String getDepartmentName() {return departmentName;}
     public Integer getManagerId() {return managerId;}
     public String getManagerFullName() {return managerFullName;}

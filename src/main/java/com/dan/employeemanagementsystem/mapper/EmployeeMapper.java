@@ -20,6 +20,9 @@ public class EmployeeMapper {
     }
 
     public static EmployeeResponseDTO convertToDTO(Employee employee) {
+
+        Employee manager = employee.getManager();
+
         return new EmployeeResponseDTO(
                 employee.getId(),
                 employee.getFirstName() + " " + employee.getLastName(),
@@ -27,8 +30,8 @@ public class EmployeeMapper {
                 employee.getRole().name(),
                 employee.getDepartment().getId(),
                 employee.getDepartment().getName(),
-                employee.getManager().getId(),
-                employee.getManager() != null ? employee.getManager().getFirstName() + " " + employee.getManager().getLastName() : null,
+                manager != null ? manager.getId() : null,
+                manager != null ? manager.getFirstName() + " " + manager.getLastName() : null,
                 employee.getSalary(), // optional: if the app is for internal users
                 employee.getCreatedAt()
         );

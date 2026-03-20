@@ -7,7 +7,9 @@ import com.dan.employeemanagementsystem.entity.Employee;
 import com.dan.employeemanagementsystem.mapper.EmployeeMapper;
 import com.dan.employeemanagementsystem.repository.EmployeeRepository;
 import jakarta.transaction.Transactional;
+import org.springframework.http.HttpStatus;
 import org.springframework.stereotype.Service;
+import org.springframework.web.server.ResponseStatusException;
 
 import java.util.List;
 
@@ -24,19 +26,22 @@ public class EmployeeService {
 
     // Get Employee by ID
     public Employee getEmployeeById(Integer employeeid) {
+
         return employeeRepository.findById(employeeid)
-                .orElseThrow(() -> new RuntimeException("Employee not found"));
+                .orElseThrow(() -> new ResponseStatusException(HttpStatus.NOT_FOUND,"Employee not found"));
     }
 
     // Get Employee DTO by ID
-    public EmployeeResponseDTO getEmployeeDTOById(int employeeid) {
-        Employee employee = getEmployeeById(employeeid);
+    public EmployeeResponseDTO getEmployeeByIdAsDTO(int employeeId) {
+
+        Employee employee = getEmployeeById(employeeId);
         return EmployeeMapper.convertToDTO(employee);
     }
 
     // Create Employee
     @Transactional
     public EmployeeResponseDTO createEmployee(EmployeeRequestDTO dto) {
+
         Department department = departmentService.getDepartmentById(dto.getDepartmentId());
         Employee manager = dto.getManagerId() != null ? getEmployeeById(dto.getManagerId()) : null;
         Employee employee = EmployeeMapper.convertToEntity(dto,department,manager);
@@ -46,6 +51,7 @@ public class EmployeeService {
     // Update Employee
     @Transactional
     public EmployeeResponseDTO updateEmployee(int employeeId, EmployeeRequestDTO dto) {
+
         Employee employee = getEmployeeById(employeeId);
         Department department = departmentService.getDepartmentById(dto.getDepartmentId());
         Employee manager = dto.getManagerId() != null ? getEmployeeById(dto.getManagerId()) : null;
@@ -54,7 +60,7 @@ public class EmployeeService {
     }
 
     // Get all Employees
-    public List<EmployeeResponseDTO> getAllEmployees() {
+    public List<EmployeeResponseDTO> getEmployees() {
 
         List<Employee> employees = employeeRepository.findAll();
 
@@ -65,6 +71,14 @@ public class EmployeeService {
 
     // Delete Employee
     public void deleteEmployee(int employeeId) {
-        employeeRepository.deleteById(employeeId);
+
+        Employee employee = getEmployeeById(employeeId);
+        employeeRepository.delete(employee);
+    }
+
+    // Count Employees by Department ID
+    public long countEmployeesInDepartment(Integer departmentId) {
+        Department department = departmentService.getDepartmentById(departmentId);
+        return employeeRepository.countByDepartmentId(departmentId);
     }
 }

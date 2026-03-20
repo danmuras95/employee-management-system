@@ -9,15 +9,15 @@ import java.time.LocalDate;
 
 public class LeaveRequestRequestDTO {
 
-    @NotNull
+    @NotNull(message = "Employee Id must not be null")
     private Integer employeeId;
-    @NotNull
-    @FutureOrPresent
+    @NotNull(message = "Start Date must not be null")
+    @FutureOrPresent(message = "Start Date must be from the future or present")
     private LocalDate startDate;
-    @NotNull
-    @Future
+    @NotNull(message = "End Date must not be null")
+    @Future(message = "End Date must be from the future")
     private LocalDate endDate;
-    @NotNull
+    @NotNull(message = "Leave Type must not be null")
     private LeaveType leaveType;
 
     public LeaveRequestRequestDTO() {

@@ -26,11 +26,11 @@ public class DepartmentService {
     // Get Department by ID
     public Department getDepartmentById(int departmentId) {
         return departmentRepository.findById(departmentId)
-                .orElseThrow(() -> new RuntimeException("Department not found"));
+                .orElseThrow(() -> new ResponseStatusException(HttpStatus.NOT_FOUND,"Department not found"));
     }
 
     // Get Department DTO by ID
-    public DepartmentDTO getDepartmentDTOById(int departmentId) {
+    public DepartmentDTO getDepartmentByIdAsDTO(int departmentId) {
         Department department = getDepartmentById(departmentId);
         return DepartmentMapper.convertToDTO(department);
     }
@@ -38,13 +38,13 @@ public class DepartmentService {
     // Get Department by Name
     public Department getDepartmentByName(String departmentName) {
         return departmentRepository.findByName(departmentName)
-                .orElseThrow(() -> new RuntimeException("Department not found"));
+                .orElseThrow(() -> new ResponseStatusException(HttpStatus.NOT_FOUND,"Department not found"));
     }
 
     // Get Department DTO by Name
-    public DepartmentDTO getDepartmentDTOByName(String departmentName) {
-        Department dept = getDepartmentByName(departmentName);
-        return DepartmentMapper.convertToDTO(dept);
+    public DepartmentDTO getDepartmentByNameAsDTO(String departmentName) {
+        Department department = getDepartmentByName(departmentName);
+        return DepartmentMapper.convertToDTO(department);
     }
 
     // Create Department
@@ -63,7 +63,7 @@ public class DepartmentService {
     }
 
     // Get all Departments
-    public List<DepartmentDTO> getAllDepartments() {
+    public List<DepartmentDTO> getDepartments() {
 
         List<Department> departments = departmentRepository.findAll();  // Fetch all Department from DB
 
@@ -74,13 +74,12 @@ public class DepartmentService {
 
     // Delete Department
     public void deleteDepartment(int departmentId) {
+
+        Department department = getDepartmentById(departmentId);
         boolean hasEmployees = employeeRepository.existsByDepartmentId(departmentId);
         if (hasEmployees) {
-            throw new ResponseStatusException(
-                    HttpStatus.CONFLICT,
-                    "Cannot delete department: employees still belong to it"
-            );
+            throw new ResponseStatusException(HttpStatus.CONFLICT, "Cannot delete department: employees still belong to it");
         }
-        departmentRepository.deleteById(departmentId); // Delete from DB
+        departmentRepository.delete(department);
     }
 }

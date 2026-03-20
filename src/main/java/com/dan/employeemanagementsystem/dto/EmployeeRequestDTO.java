@@ -1,27 +1,26 @@
 package com.dan.employeemanagementsystem.dto;
 
 import com.dan.employeemanagementsystem.enums.Role;
-import jakarta.validation.constraints.Email;
-import jakarta.validation.constraints.NotBlank;
-import jakarta.validation.constraints.NotNull;
-import jakarta.validation.constraints.PositiveOrZero;
+import jakarta.validation.constraints.*;
 
 import java.math.BigDecimal;
 
 public class EmployeeRequestDTO {
 
-    @NotBlank
+    @NotBlank(message = "First name must not be blank")
     private String firstName;
-    @NotBlank
+    @NotBlank(message = "Last name must not be blank")
     private String lastName;
-    @NotBlank @Email
+    @NotBlank(message = "Email must not be blank")
+    @Email(message = "Email must have an Email format")
     private String email;
-    @NotBlank
+    @NotNull(message = "Role must not be null")
     private Role role;
-    @NotNull
+    @NotNull(message = "Department Id must not be null")
     private Integer departmentId;
     private Integer managerId; // optional
-    @NotNull @PositiveOrZero
+    @NotNull(message = "Salary must not be null")
+    @Positive(message = "Salary must be positive")
     private BigDecimal salary;
 
     public EmployeeRequestDTO() {

@@ -5,9 +5,9 @@ import jakarta.validation.constraints.NotBlank;
 public class DepartmentDTO {
 
     private Integer id;
-    @NotBlank
+    @NotBlank(message = "Name must not be blank")
     private String name;
-    @NotBlank
+    @NotBlank(message = "Location must not be blank")
     private String location;
 
     public DepartmentDTO() {

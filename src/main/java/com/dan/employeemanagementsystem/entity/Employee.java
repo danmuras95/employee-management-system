@@ -4,6 +4,7 @@ import com.dan.employeemanagementsystem.enums.Role;
 import jakarta.persistence.*;
 import jakarta.validation.constraints.Email;
 import jakarta.validation.constraints.NotBlank;
+import jakarta.validation.constraints.NotNull;
 
 import java.math.BigDecimal;
 import java.time.LocalDateTime;
@@ -26,6 +27,7 @@ public class Employee {
     @NotBlank
     private String email;
 
+    @NotNull(message = "Role must be provided")
     @Enumerated(EnumType.STRING)
     @Column(nullable = false)
     private Role role;

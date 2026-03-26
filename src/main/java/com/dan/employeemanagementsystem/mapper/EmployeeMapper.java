@@ -5,6 +5,7 @@ import com.dan.employeemanagementsystem.dto.EmployeeResponseDTO;
 import com.dan.employeemanagementsystem.entity.Department;
 import com.dan.employeemanagementsystem.entity.Employee;
 
+
 public class EmployeeMapper {
 
     public static Employee convertToEntity(EmployeeRequestDTO dto, Department department, Employee manager) {

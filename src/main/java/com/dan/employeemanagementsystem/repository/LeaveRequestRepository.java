@@ -27,8 +27,6 @@ public interface LeaveRequestRepository extends JpaRepository<LeaveRequest, Inte
             "l.startDate, l.endDate, l.leaveType, l.leaveStatus, l.createdAt) " +
             "FROM LeaveRequest l WHERE l.employee.id = :employeeId")
     List<LeaveRequestResponseDTO> findByEmployeeId(@Param("employeeId") Integer employeeId);
-    // Find Leave Requests by Employee ID and Leave Status
-    List<LeaveRequest> findByEmployeeIdAndLeaveStatus(Integer employeeId, LeaveStatus status);
     // Find Leave Requests between Start Date and End Date
     List<LeaveRequest> findByStartDateBetween(LocalDate start, LocalDate end);
 }

@@ -44,7 +44,7 @@ public class LeaveRequest {
         this.createdAt = LocalDateTime.now();
     }
 
-    protected LeaveRequest() {} // JPA
+    public LeaveRequest() {} // JPA
 
     public LeaveRequest(Employee employee, LocalDate startDate, LocalDate endDate, LeaveType leaveType) {
         this.employee = employee;

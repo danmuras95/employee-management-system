@@ -64,7 +64,7 @@ public class LeaveRequestService {
     public LeaveRequestResponseDTO createLeaveRequest(LeaveRequestRequestDTO dto) {
         Employee employee = employeeService.getEmployeeById(dto.getEmployeeId());
         LeaveRequest leaveRequest = LeaveRequestMapper.convertToEntity(dto, employee);
-        return LeaveRequestMapper.convertToDTO(leaveRequestRepository.save(leaveRequest)); // save to DB then convert to DTO and return
+        return LeaveRequestMapper.convertToDTO(leaveRequestRepository.save(leaveRequest));
     }
 
     // Update Leave Request

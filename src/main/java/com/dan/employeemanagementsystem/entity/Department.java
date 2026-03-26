@@ -14,7 +14,7 @@ public class Department {
 
     private String location;
 
-    protected Department() {}
+    public Department() {}
 
     public Department(String name, String location) {
         this.name = name;

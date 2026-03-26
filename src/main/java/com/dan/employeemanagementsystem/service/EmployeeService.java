@@ -51,7 +51,9 @@ public class EmployeeService {
     // Update Employee
     @Transactional
     public EmployeeResponseDTO updateEmployee(int employeeId, EmployeeRequestDTO dto) {
-
+        if (employeeRepository.existsByEmail(dto.getEmail())) {
+            throw new ResponseStatusException(HttpStatus.BAD_REQUEST, "Email is already taken. Please use a different email.");
+        }
         Employee employee = getEmployeeById(employeeId);
         Department department = departmentService.getDepartmentById(dto.getDepartmentId());
         Employee manager = dto.getManagerId() != null ? getEmployeeById(dto.getManagerId()) : null;

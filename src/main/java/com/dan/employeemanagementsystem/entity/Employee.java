@@ -51,7 +51,7 @@ public class Employee {
         this.createdAt = LocalDateTime.now();
     }
 
-    protected Employee() {} // JPA
+    public Employee() {} // JPA
 
     public Employee(String firstName, String lastName, String email, Role role, Department department, Employee manager, BigDecimal salary) {
         this.firstName = firstName;

@@ -15,3 +15,15 @@ spring:
 
 server:
   port: 8080  # optional, default is 8080
+
+logging:
+  level:
+    root: INFO
+    com.dan.employeemanagementsystem: DEBUG
+    org.hibernate.SQL: ERROR
+    org.hibernate.type.descriptor.sql.BasicBinder: ERROR
+  file:
+    name: logs/employee-management.log
+  pattern:
+    console: "%d{yyyy-MM-dd HH:mm:ss} %-5level %logger{36} - %msg%n"
+    file: "%d{yyyy-MM-dd HH:mm:ss} %-5level %logger{36} - %msg%n"

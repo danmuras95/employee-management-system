@@ -80,14 +80,13 @@ class EmployeeServiceTest {
                 Role.MANAGER, 1, null, BigDecimal.valueOf(50000)
         );
 
-        when(departmentService.getDepartmentById(1)).thenReturn(department);
-
         Employee employee = new Employee(
                 "John", "Doe", "john.doe@example.com",
                 Role.MANAGER, department, null, BigDecimal.valueOf(50000)
         );
         employee.setId(1);
 
+        when(departmentService.getDepartmentById(1)).thenReturn(department);
         when(employeeRepository.save(any(Employee.class))).thenReturn(employee);
 
         EmployeeResponseDTO result = employeeService.createEmployee(requestDTO);
@@ -235,9 +234,14 @@ class EmployeeServiceTest {
     void updateEmployee_emailAlreadyExists_shouldThrowException() {
         int employeeId = 1;
 
+        Employee existingEmployee = new Employee();
+        existingEmployee.setId(employeeId);
+        existingEmployee.setEmail("old@email.com");
+
         EmployeeRequestDTO dto = new EmployeeRequestDTO();
         dto.setEmail("existing@email.com");
 
+        when(employeeRepository.findById(employeeId)).thenReturn(Optional.of(existingEmployee));
         when(employeeRepository.existsByEmail(dto.getEmail())).thenReturn(true);
 
         ResponseStatusException exception = assertThrows(ResponseStatusException.class,

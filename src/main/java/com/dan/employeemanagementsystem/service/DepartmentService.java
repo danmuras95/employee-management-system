@@ -11,7 +11,9 @@ import org.springframework.stereotype.Service;
 import org.springframework.web.server.ResponseStatusException;
 
 import java.util.List;
+import lombok.extern.slf4j.Slf4j;
 
+@Slf4j
 @Service
 public class DepartmentService {
 
@@ -25,24 +27,34 @@ public class DepartmentService {
 
     // Get Department by ID
     public Department getDepartmentById(int departmentId) {
+        log.debug("Debug log: department id = {}", departmentId);
         return departmentRepository.findById(departmentId)
-                .orElseThrow(() -> new ResponseStatusException(HttpStatus.NOT_FOUND,"Department not found"));
+                .orElseThrow(() -> {
+                    log.error("Department not found with id {}", departmentId);
+                    return new ResponseStatusException(HttpStatus.NOT_FOUND, "Department not found");
+                });
     }
 
     // Get Department DTO by ID
     public DepartmentDTO getDepartmentByIdAsDTO(int departmentId) {
+        log.debug("Fetching department DTO with ID: {}", departmentId);
         Department department = getDepartmentById(departmentId);
         return DepartmentMapper.convertToDTO(department);
     }
 
     // Get Department by Name
     public Department getDepartmentByName(String departmentName) {
+        log.debug("Fetching department with name: {}", departmentName);
         return departmentRepository.findByName(departmentName)
-                .orElseThrow(() -> new ResponseStatusException(HttpStatus.NOT_FOUND,"Department not found"));
+                .orElseThrow(() -> {
+                    log.error("Department not found with name: {}", departmentName);
+                    return new ResponseStatusException(HttpStatus.NOT_FOUND, "Department not found");
+                });
     }
 
     // Get Department DTO by Name
     public DepartmentDTO getDepartmentByNameAsDTO(String departmentName) {
+        log.debug("Fetching department DTO with name: {}", departmentName);
         Department department = getDepartmentByName(departmentName);
         return DepartmentMapper.convertToDTO(department);
     }
@@ -50,23 +62,29 @@ public class DepartmentService {
     // Create Department
     @Transactional
     public DepartmentDTO createDepartment(DepartmentDTO dto) {
+        log.info("Creating department with name: {}", dto.getName());
         Department department = DepartmentMapper.convertToEntity(dto);
-        return DepartmentMapper.convertToDTO(departmentRepository.save(department)); // save to DB then convert to DTO and return
+        Department savedDepartment = departmentRepository.save(department);
+        log.info("Department created with ID: {}", savedDepartment.getId());
+        return DepartmentMapper.convertToDTO(savedDepartment);
     }
 
     // Update Department
     @Transactional
     public DepartmentDTO updateDepartment(int departmentId, DepartmentDTO dto) {
+        log.info("Updating department with ID: {}", departmentId);
         Department department = getDepartmentById(departmentId);
         DepartmentMapper.updateEntityFromDTO(department, dto);
-        return DepartmentMapper.convertToDTO(departmentRepository.save(department));
+        Department updatedDepartment = departmentRepository.save(department);
+        log.info("Department updated with ID: {}", updatedDepartment.getId());
+        return DepartmentMapper.convertToDTO(updatedDepartment);
     }
 
     // Get all Departments
     public List<DepartmentDTO> getDepartments() {
-
-        List<Department> departments = departmentRepository.findAll();  // Fetch all Department from DB
-
+        log.debug("Fetching all departments");
+        List<Department> departments = departmentRepository.findAll();
+        log.debug("Fetched {} departments", departments.size());
         return departments.stream()
                 .map(DepartmentMapper::convertToDTO)
                 .toList();
@@ -74,12 +92,14 @@ public class DepartmentService {
 
     // Delete Department
     public void deleteDepartment(int departmentId) {
-
+        log.info("Attempting to delete department with ID: {}", departmentId);
         Department department = getDepartmentById(departmentId);
         boolean hasEmployees = employeeRepository.existsByDepartmentId(departmentId);
         if (hasEmployees) {
+            log.warn("Department with ID: {} cannot be deleted, employees still belong to it", departmentId);
             throw new ResponseStatusException(HttpStatus.CONFLICT, "Cannot delete department: employees still belong to it");
         }
+        log.info("Department with ID: {} deleted successfully", departmentId);
         departmentRepository.delete(department);
     }
 }

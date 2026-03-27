@@ -14,7 +14,9 @@ import org.springframework.stereotype.Service;
 import org.springframework.web.server.ResponseStatusException;
 
 import java.util.List;
+import lombok.extern.slf4j.Slf4j;
 
+@Slf4j
 @Service
 public class LeaveRequestService {
 
@@ -28,60 +30,65 @@ public class LeaveRequestService {
 
     // Get Leave Request by ID
     public LeaveRequest getLeaveRequestById(int leaveRequestId) {
+        log.debug("Fetching leave request with ID: {}", leaveRequestId);
         return leaveRequestRepository.findById(leaveRequestId)
-                .orElseThrow(() -> new ResponseStatusException(HttpStatus.NOT_FOUND,"Leave Request not found"));
+                .orElseThrow(() -> {
+                    log.error("Leave request not found with ID: {}", leaveRequestId);
+                    return new ResponseStatusException(HttpStatus.NOT_FOUND,"Leave Request not found");
+                });
     }
 
     // Get Leave Request DTO by ID
     public LeaveRequestResponseDTO getLeaveRequestByIdAsDTO(int leaveRequestId) {
+        log.debug("Fetching leave request DTO with ID: {}", leaveRequestId);
         LeaveRequest leaveRequest = getLeaveRequestById(leaveRequestId);
         return LeaveRequestMapper.convertToDTO(leaveRequest);
     }
 
-    // Get Leave Requests by Employee ID
-    public List<LeaveRequestResponseDTO> getLeaveRequestsByEmployeeId(int employeeId) {
-        List<LeaveRequestResponseDTO> leaveRequests = leaveRequestRepository.findByEmployeeId(employeeId);
-        if (leaveRequests.isEmpty()) {
-            throw new ResponseStatusException(HttpStatus.NOT_FOUND,"Leave Requests with the Employee ID: " + employeeId + ", were not found");
-        }
-        return leaveRequests;
-    }
-
     // Get all Leave Requests by Leave Type or Leave Status, both or all
     public List<LeaveRequestResponseDTO> getLeaveRequests(LeaveType type, LeaveStatus status) {
-
+        log.debug("Fetching leave requests with filter - Type: {}, Status: {}", type, status);
         List<LeaveRequestResponseDTO> leaveRequests = leaveRequestRepository.findByOptionalTypeAndStatus(type, status);
 
         if (leaveRequests.isEmpty()) {
+            log.warn("No leave requests found for type: {} and status: {}", type, status);
             throw new ResponseStatusException(HttpStatus.NOT_FOUND,
                     "No leave requests found for the given filters");
         }
+        log.info("Found {} leave requests for type: {} and status: {}", leaveRequests.size(), type, status);
         return leaveRequests;
     }
 
     // Create Leave Request
     @Transactional
     public LeaveRequestResponseDTO createLeaveRequest(LeaveRequestRequestDTO dto) {
+        log.info("Creating leave request for employee ID: {}", dto.getEmployeeId());
         Employee employee = employeeService.getEmployeeById(dto.getEmployeeId());
         LeaveRequest leaveRequest = LeaveRequestMapper.convertToEntity(dto, employee);
-        return LeaveRequestMapper.convertToDTO(leaveRequestRepository.save(leaveRequest));
+        LeaveRequest savedLeaveRequest = leaveRequestRepository.save(leaveRequest);
+        log.info("Leave request created with ID: {}", savedLeaveRequest.getId());
+        return LeaveRequestMapper.convertToDTO(savedLeaveRequest);
     }
 
     // Update Leave Request
     @Transactional
     public LeaveRequestResponseDTO updateLeaveRequest(int leaveRequestId, LeaveRequestRequestDTO dto) {
+        log.info("Updating leave request with ID: {}", leaveRequestId);
         LeaveRequest leaveRequest = getLeaveRequestById(leaveRequestId);
         LeaveRequestMapper.updateEntityFromDTO(leaveRequest, dto);
-        return LeaveRequestMapper.convertToDTO(leaveRequestRepository.save(leaveRequest));
+        LeaveRequest updatedLeaveRequest = leaveRequestRepository.save(leaveRequest);
+        log.info("Leave request updated with ID: {}", updatedLeaveRequest.getId());
+        return LeaveRequestMapper.convertToDTO(updatedLeaveRequest);
     }
 
     // Cancel Leave Request
     @Transactional
     public LeaveRequestResponseDTO cancelLeaveRequest(int leaveRequestId) {
-
+        log.info("Attempting to cancel leave request with ID: {}", leaveRequestId);
         LeaveRequest leaveRequest = getLeaveRequestById(leaveRequestId);
         // Check if already canceled
         if (leaveRequest.getLeaveStatus() == LeaveStatus.CANCELLED) {
+            log.warn("Leave request with ID: {} is already canceled", leaveRequestId);
             throw new ResponseStatusException(
                     HttpStatus.CONFLICT,
                     "Leave Request is already canceled"
@@ -89,6 +96,8 @@ public class LeaveRequestService {
         }
 
         leaveRequest.setLeaveStatus(LeaveStatus.CANCELLED);
-        return LeaveRequestMapper.convertToDTO(leaveRequestRepository.save(leaveRequest));
+        LeaveRequest updatedLeaveRequest = leaveRequestRepository.save(leaveRequest);
+        log.info("Leave request with ID: {} canceled successfully", leaveRequestId);
+        return LeaveRequestMapper.convertToDTO(updatedLeaveRequest);
     }
 }

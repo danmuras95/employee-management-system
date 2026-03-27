@@ -12,7 +12,9 @@ import org.springframework.stereotype.Service;
 import org.springframework.web.server.ResponseStatusException;
 
 import java.util.List;
+import lombok.extern.slf4j.Slf4j;
 
+@Slf4j
 @Service
 public class EmployeeService {
 
@@ -26,14 +28,42 @@ public class EmployeeService {
 
     // Get Employee by ID
     public Employee getEmployeeById(Integer employeeid) {
-
+        log.debug("Fetching employee with ID: {}", employeeid);
         return employeeRepository.findById(employeeid)
-                .orElseThrow(() -> new ResponseStatusException(HttpStatus.NOT_FOUND,"Employee not found"));
+                .orElseThrow(() -> {
+                    log.error("Employee with ID: {} not found", employeeid);
+                    return new ResponseStatusException(HttpStatus.NOT_FOUND, "Employee not found");
+                });
+    }
+
+    public Employee getManagerById(Integer managerId) {
+        log.debug("Fetching manager with ID: {}", managerId);
+        return managerId != null ? getEmployeeById(managerId) : null;
+    }
+
+    private void validateEmailForCreate(String email) {
+        log.debug("Validating email for creation: {}", email);
+        if (employeeRepository.existsByEmail(email)) {
+            log.error("Email already taken: {}", email);
+            throw new ResponseStatusException(
+                    HttpStatus.BAD_REQUEST, "Email is already taken. Please use a different email."
+            );
+        }
+    }
+
+    private void validateEmailUpdate(String newEmail, String currentEmail) {
+        log.debug("Validating email update from {} to {}", currentEmail, newEmail);
+        if (!newEmail.equals(currentEmail) && employeeRepository.existsByEmail(newEmail)) {
+            log.error("Email update failed, new email already taken: {}", newEmail);
+            throw new ResponseStatusException(
+                    HttpStatus.BAD_REQUEST, "Email is already taken. Please use a different email."
+            );
+        }
     }
 
     // Get Employee DTO by ID
     public EmployeeResponseDTO getEmployeeByIdAsDTO(int employeeId) {
-
+        log.debug("Fetching employee DTO for ID: {}", employeeId);
         Employee employee = getEmployeeById(employeeId);
         return EmployeeMapper.convertToDTO(employee);
     }
@@ -41,31 +71,35 @@ public class EmployeeService {
     // Create Employee
     @Transactional
     public EmployeeResponseDTO createEmployee(EmployeeRequestDTO dto) {
-
+        log.info("Creating employee with email: {}", dto.getEmail());
+        validateEmailForCreate(dto.getEmail());
         Department department = departmentService.getDepartmentById(dto.getDepartmentId());
-        Employee manager = dto.getManagerId() != null ? getEmployeeById(dto.getManagerId()) : null;
+        Employee manager = getManagerById(dto.getManagerId());
         Employee employee = EmployeeMapper.convertToEntity(dto,department,manager);
-        return EmployeeMapper.convertToDTO(employeeRepository.save(employee)); // save to DB then convert to DTO and return
+        Employee savedEmployee = employeeRepository.save(employee);
+        log.info("Employee created with ID: {}", savedEmployee.getId());
+        return EmployeeMapper.convertToDTO(savedEmployee);
     }
 
     // Update Employee
     @Transactional
     public EmployeeResponseDTO updateEmployee(int employeeId, EmployeeRequestDTO dto) {
-        if (employeeRepository.existsByEmail(dto.getEmail())) {
-            throw new ResponseStatusException(HttpStatus.BAD_REQUEST, "Email is already taken. Please use a different email.");
-        }
+        log.info("Updating employee with ID: {}", employeeId);
         Employee employee = getEmployeeById(employeeId);
+        validateEmailUpdate(dto.getEmail(), employee.getEmail());
         Department department = departmentService.getDepartmentById(dto.getDepartmentId());
-        Employee manager = dto.getManagerId() != null ? getEmployeeById(dto.getManagerId()) : null;
+        Employee manager = getManagerById(dto.getManagerId());
         EmployeeMapper.updateEntityFromDTO(employee, dto, department, manager);
-        return EmployeeMapper.convertToDTO(employeeRepository.save(employee));
+        Employee updatedEmployee = employeeRepository.save(employee);
+        log.info("Employee updated with ID: {}", updatedEmployee.getId());
+        return EmployeeMapper.convertToDTO(updatedEmployee);
     }
 
     // Get all Employees
     public List<EmployeeResponseDTO> getEmployees() {
-
+        log.info("Fetching all employees");
         List<Employee> employees = employeeRepository.findAll();
-
+        log.debug("Fetched {} employees", employees.size());
         return employees.stream()
                 .map(EmployeeMapper::convertToDTO)
                 .toList();
@@ -73,14 +107,18 @@ public class EmployeeService {
 
     // Delete Employee
     public void deleteEmployee(int employeeId) {
-
+        log.info("Deleting employee with ID: {}", employeeId);
         Employee employee = getEmployeeById(employeeId);
         employeeRepository.delete(employee);
+        log.info("Employee with ID: {} deleted successfully", employeeId);
     }
 
     // Count Employees by Department ID
     public long countEmployeesInDepartment(Integer departmentId) {
+        log.debug("Counting employees in department with ID: {}", departmentId);
         Department department = departmentService.getDepartmentById(departmentId);
-        return employeeRepository.countByDepartmentId(departmentId);
+        long count = employeeRepository.countByDepartmentId(departmentId);
+        log.debug("Found {} employees in department with ID: {}", count, departmentId);
+        return count;
     }
 }

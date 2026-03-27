@@ -9,6 +9,7 @@ A Spring Boot HR management system providing REST endpoints for employee, depart
 - Input validation to ensure data integrity
 - Global exception handling with meaningful HTTP responses
 - Unit tests for service layer using Mockito
+- Comprehensive logging for tracking application flow and errors
 
 ## Tech Stack
 - Java

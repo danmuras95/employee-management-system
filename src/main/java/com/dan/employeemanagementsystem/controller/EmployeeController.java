@@ -2,11 +2,14 @@ package com.dan.employeemanagementsystem.controller;
 
 import com.dan.employeemanagementsystem.dto.EmployeeRequestDTO;
 import com.dan.employeemanagementsystem.dto.EmployeeResponseDTO;
+import com.dan.employeemanagementsystem.dto.PaginatedResponseDTO;
 import com.dan.employeemanagementsystem.service.EmployeeService;
 import jakarta.validation.Valid;
+import jakarta.validation.constraints.Max;
+import jakarta.validation.constraints.Min;
 import org.springframework.http.HttpStatus;
-import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.*;
+import org.springframework.web.bind.annotation.RequestParam;
 
 import java.util.List;
 
@@ -21,8 +24,11 @@ public class EmployeeController {
     }
 
     @GetMapping
-    public List<EmployeeResponseDTO> getEmployees() {
-        return employeeService.getEmployees();
+    public PaginatedResponseDTO<EmployeeResponseDTO> getEmployees(@RequestParam(defaultValue = "0") @Min(0) int page,
+                                                                  @RequestParam(defaultValue = "10") @Min(1) @Max(100) int size,
+                                                                  @RequestParam(defaultValue = "id") String sortBy,
+                                                                  @RequestParam(defaultValue = "asc") String direction) {
+        return employeeService.getEmployees(page, size, sortBy, direction);
     }
 
     @GetMapping("/{employeeId}")
@@ -43,7 +49,7 @@ public class EmployeeController {
 
     @DeleteMapping("/{employeeId}")
     @ResponseStatus(HttpStatus.NO_CONTENT)
-    public void deleteDepartment(@PathVariable int employeeId) {
+    public void deleteEmployee(@PathVariable int employeeId) {
         employeeService.deleteEmployee(employeeId);
     }
 

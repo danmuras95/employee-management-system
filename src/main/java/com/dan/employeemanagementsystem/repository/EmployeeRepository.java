@@ -3,14 +3,16 @@ package com.dan.employeemanagementsystem.repository;
 import com.dan.employeemanagementsystem.entity.Employee;
 import com.dan.employeemanagementsystem.enums.Role;
 import org.springframework.data.domain.Page;
+import org.springframework.data.domain.Pageable;
 import org.springframework.data.jpa.repository.JpaRepository;
 
-import org.springframework.data.domain.Pageable;
 import java.util.List;
 import java.util.Optional;
 
 public interface EmployeeRepository extends JpaRepository<Employee, Integer> {
 
+    // Find All with Pagination
+    Page<Employee> findAll(Pageable pageable);
     // Find Employee by Email
     Optional<Employee> findByEmail(String email);
     // Find Employees by Department ID

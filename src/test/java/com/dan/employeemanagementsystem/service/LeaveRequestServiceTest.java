@@ -2,6 +2,7 @@ package com.dan.employeemanagementsystem.service;
 
 import com.dan.employeemanagementsystem.dto.LeaveRequestRequestDTO;
 import com.dan.employeemanagementsystem.dto.LeaveRequestResponseDTO;
+import com.dan.employeemanagementsystem.dto.PaginatedResponseDTO;
 import com.dan.employeemanagementsystem.entity.Employee;
 import com.dan.employeemanagementsystem.entity.LeaveRequest;
 import com.dan.employeemanagementsystem.enums.LeaveStatus;
@@ -11,6 +12,10 @@ import org.junit.jupiter.api.extension.ExtendWith;
 import org.mockito.InjectMocks;
 import org.mockito.Mock;
 import org.mockito.junit.jupiter.MockitoExtension;
+import org.springframework.data.domain.Page;
+import org.springframework.data.domain.PageImpl;
+import org.springframework.data.domain.PageRequest;
+import org.springframework.data.domain.Pageable;
 import org.springframework.web.server.ResponseStatusException;
 import java.util.Optional;
 import static org.junit.jupiter.api.Assertions.*;
@@ -55,23 +60,32 @@ class LeaveRequestServiceTest {
 
     // ---------------------- GET WITH FILTERS ----------------------
     @Test
-    void getLeaveRequests_withResults_returnsList() {
+    void getLeaveRequests_withResults_returnsPaginatedResponse() {
         List<LeaveRequestResponseDTO> list = List.of(new LeaveRequestResponseDTO());
 
-        when(leaveRequestRepository.findByOptionalTypeAndStatus(null, null)).thenReturn(list);
+        Page<LeaveRequestResponseDTO> page = new PageImpl<>(list);
 
-        List<LeaveRequestResponseDTO> result = leaveRequestService.getLeaveRequests(null, null);
+        when(leaveRequestRepository.findByOptionalTypeAndStatus(any(), any(), any(Pageable.class))).thenReturn(page);
+
+        PaginatedResponseDTO<LeaveRequestResponseDTO> result = leaveRequestService.getLeaveRequests(
+                null, null, 0, 10, "id", "asc");
 
         assertNotNull(result);
-        assertEquals(1, result.size());
-        verify(leaveRequestRepository).findByOptionalTypeAndStatus(null, null);
+        assertEquals(1, result.getContent().size());
+        verify(leaveRequestRepository).findByOptionalTypeAndStatus(any(), any(), any(Pageable.class));
     }
 
     @Test
-    void getLeaveRequests_noResults_throwsException() {
-        when(leaveRequestRepository.findByOptionalTypeAndStatus(null, null)).thenReturn(List.of());
+    void getLeaveRequests_noResults_returnsEmptyPage() {
+        Page<LeaveRequestResponseDTO> emptyPage = Page.empty();
 
-        assertThrows(ResponseStatusException.class, () -> leaveRequestService.getLeaveRequests(null, null));
+        when(leaveRequestRepository.findByOptionalTypeAndStatus(any(), any(), any(Pageable.class))).thenReturn(emptyPage);
+
+        PaginatedResponseDTO<LeaveRequestResponseDTO> result = leaveRequestService.getLeaveRequests(
+                null, null, 0, 10, "id", "asc");
+
+        assertNotNull(result);
+        assertTrue(result.getContent().isEmpty());
     }
 
     // ---------------------- CREATE ----------------------

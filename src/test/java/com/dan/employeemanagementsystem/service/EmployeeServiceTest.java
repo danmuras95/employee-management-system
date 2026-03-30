@@ -2,6 +2,7 @@ package com.dan.employeemanagementsystem.service;
 
 import com.dan.employeemanagementsystem.dto.EmployeeRequestDTO;
 import com.dan.employeemanagementsystem.dto.EmployeeResponseDTO;
+import com.dan.employeemanagementsystem.dto.PaginatedResponseDTO;
 import com.dan.employeemanagementsystem.entity.Department;
 import com.dan.employeemanagementsystem.entity.Employee;
 import com.dan.employeemanagementsystem.enums.Role;
@@ -11,6 +12,9 @@ import org.junit.jupiter.api.extension.ExtendWith;
 import org.mockito.InjectMocks;
 import org.mockito.Mock;
 import org.mockito.junit.jupiter.MockitoExtension;
+import org.springframework.data.domain.Page;
+import org.springframework.data.domain.PageImpl;
+import org.springframework.data.domain.Pageable;
 import org.springframework.http.HttpStatus;
 import org.springframework.web.server.ResponseStatusException;
 
@@ -102,7 +106,7 @@ class EmployeeServiceTest {
 
     // ---------------------- GET ALL ----------------------
     @Test
-    void getEmployees_returnsListOfEmployeeDTOs() {
+    void getEmployees_withResults_returnsPaginatedResponse() {
         Department department = new Department("IT", "Floor 1");
         department.setId(1);
 
@@ -114,30 +118,32 @@ class EmployeeServiceTest {
                 department, null, BigDecimal.valueOf(60000));
         employee2.setId(2);
 
-        when(employeeRepository.findAll()).thenReturn(List.of(employee1, employee2));
+        Page<Employee> page = new PageImpl<>(List.of(employee1, employee2));
 
-        List<EmployeeResponseDTO> result = employeeService.getEmployees();
+        when(employeeRepository.findAll(any(Pageable.class))).thenReturn(page);
+
+        PaginatedResponseDTO<EmployeeResponseDTO> result = employeeService.getEmployees(0, 10, "id", "asc");
 
         assertNotNull(result);
-        assertEquals(2, result.size());
-        assertEquals("John Doe", result.get(0).getFullName());
-        assertEquals("Jane Smith", result.get(1).getFullName());
-        assertEquals("john.doe@example.com", result.get(0).getEmail());
-        assertEquals("jane.smith@example.com", result.get(1).getEmail());
-
-        verify(employeeRepository).findAll();
+        assertEquals(2, result.getContent().size());
+        assertEquals("John Doe", result.getContent().get(0).getFullName());
+        assertEquals("Jane Smith", result.getContent().get(1).getFullName());
+        assertEquals("john.doe@example.com", result.getContent().get(0).getEmail());
+        assertEquals("jane.smith@example.com", result.getContent().get(1).getEmail());
+        verify(employeeRepository).findAll(any(Pageable.class));
     }
 
     @Test
-    void getEmployees_noEmployees_returnsEmptyList() {
-        when(employeeRepository.findAll()).thenReturn(List.of());
+    void getEmployees_noEmployees_returnsEmptyPage() {
+        Page<Employee> emptyPage = Page.empty();
 
-        List<EmployeeResponseDTO> result = employeeService.getEmployees();
+        when(employeeRepository.findAll(any(Pageable.class))).thenReturn(emptyPage);
+
+        PaginatedResponseDTO<EmployeeResponseDTO> result = employeeService.getEmployees(0, 10, "id", "asc");
 
         assertNotNull(result);
-        assertTrue(result.isEmpty());
-
-        verify(employeeRepository).findAll();
+        assertTrue(result.getContent().isEmpty());
+        verify(employeeRepository).findAll(any(Pageable.class));
     }
 
     // ---------------------- DELETE ----------------------

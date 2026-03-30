@@ -2,6 +2,7 @@ package com.dan.employeemanagementsystem.service;
 
 import com.dan.employeemanagementsystem.dto.LeaveRequestRequestDTO;
 import com.dan.employeemanagementsystem.dto.LeaveRequestResponseDTO;
+import com.dan.employeemanagementsystem.dto.PaginatedResponseDTO;
 import com.dan.employeemanagementsystem.entity.Employee;
 import com.dan.employeemanagementsystem.entity.LeaveRequest;
 import com.dan.employeemanagementsystem.enums.LeaveStatus;
@@ -9,12 +10,16 @@ import com.dan.employeemanagementsystem.enums.LeaveType;
 import com.dan.employeemanagementsystem.mapper.LeaveRequestMapper;
 import com.dan.employeemanagementsystem.repository.LeaveRequestRepository;
 import jakarta.transaction.Transactional;
+import org.springframework.data.domain.Sort;
 import org.springframework.http.HttpStatus;
 import org.springframework.stereotype.Service;
 import org.springframework.web.server.ResponseStatusException;
 
 import java.util.List;
 import lombok.extern.slf4j.Slf4j;
+import org.springframework.data.domain.Page;
+import org.springframework.data.domain.PageRequest;
+import org.springframework.data.domain.Pageable;
 
 @Slf4j
 @Service
@@ -46,17 +51,20 @@ public class LeaveRequestService {
     }
 
     // Get all Leave Requests by Leave Type or Leave Status, both or all
-    public List<LeaveRequestResponseDTO> getLeaveRequests(LeaveType type, LeaveStatus status) {
+    public PaginatedResponseDTO<LeaveRequestResponseDTO> getLeaveRequests(LeaveType type, LeaveStatus status,
+                                                                          int page, int size, String sortBy, String direction) {
         log.debug("Fetching leave requests with filter - Type: {}, Status: {}", type, status);
-        List<LeaveRequestResponseDTO> leaveRequests = leaveRequestRepository.findByOptionalTypeAndStatus(type, status);
+        Sort sort = direction.equalsIgnoreCase("desc") ? Sort.by(sortBy).descending() : Sort.by(sortBy).ascending();
+        Pageable pageable = PageRequest.of(page, size, sort);
+        Page<LeaveRequestResponseDTO> leaveRequestPage = leaveRequestRepository.findByOptionalTypeAndStatus(type, status, pageable);
 
-        if (leaveRequests.isEmpty()) {
+        if (leaveRequestPage.isEmpty()) {
             log.warn("No leave requests found for type: {} and status: {}", type, status);
-            throw new ResponseStatusException(HttpStatus.NOT_FOUND,
-                    "No leave requests found for the given filters");
         }
-        log.info("Found {} leave requests for type: {} and status: {}", leaveRequests.size(), type, status);
-        return leaveRequests;
+        log.info("Found {} leave requests for type: {} and status: {}", leaveRequestPage.getTotalElements(), type, status);
+        return new PaginatedResponseDTO<>(leaveRequestPage.getContent(), leaveRequestPage.getNumber(),
+                leaveRequestPage.getSize(), leaveRequestPage.getTotalElements(), leaveRequestPage.getTotalPages()
+        );
     }
 
     // Create Leave Request

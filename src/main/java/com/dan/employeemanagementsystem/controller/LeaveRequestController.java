@@ -2,10 +2,13 @@ package com.dan.employeemanagementsystem.controller;
 
 import com.dan.employeemanagementsystem.dto.LeaveRequestRequestDTO;
 import com.dan.employeemanagementsystem.dto.LeaveRequestResponseDTO;
+import com.dan.employeemanagementsystem.dto.PaginatedResponseDTO;
 import com.dan.employeemanagementsystem.enums.LeaveStatus;
 import com.dan.employeemanagementsystem.enums.LeaveType;
 import com.dan.employeemanagementsystem.service.LeaveRequestService;
 import jakarta.validation.Valid;
+import jakarta.validation.constraints.Max;
+import jakarta.validation.constraints.Min;
 import org.springframework.web.bind.annotation.*;
 
 import java.util.List;
@@ -21,10 +24,14 @@ public class LeaveRequestController {
     }
 
     @GetMapping
-    public List<LeaveRequestResponseDTO> getLeaveRequests(             //leaveRequests?leaveType=VACATION
-            @RequestParam(required = false) LeaveType leaveType,       //leaveRequests?leaveStatus=APPROVED
-            @RequestParam(required = false) LeaveStatus leaveStatus) { //leaveRequests?leaveType=VACATION&&leaveStatus=APPROVED
-        return leaveRequestService.getLeaveRequests(leaveType, leaveStatus);
+    public PaginatedResponseDTO<LeaveRequestResponseDTO> getLeaveRequests( //leaveRequests?leaveType=VACATION
+            @RequestParam(required = false) LeaveType leaveType,          //leaveRequests?leaveStatus=APPROVED
+            @RequestParam(required = false) LeaveStatus leaveStatus,     //leaveRequests?leaveType=VACATION&&leaveStatus=APPROVED
+            @RequestParam(defaultValue = "0") @Min(0) int page,
+            @RequestParam(defaultValue = "10") @Min(1) @Max(100) int size,
+            @RequestParam(defaultValue = "id") String sortBy,
+            @RequestParam(defaultValue = "asc") String direction){
+        return leaveRequestService.getLeaveRequests(leaveType, leaveStatus, page, size, sortBy, direction);
     }
 
     @GetMapping("/{leaveRequestId}")

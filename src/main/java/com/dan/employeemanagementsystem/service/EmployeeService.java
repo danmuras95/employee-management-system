@@ -2,17 +2,22 @@ package com.dan.employeemanagementsystem.service;
 
 import com.dan.employeemanagementsystem.dto.EmployeeRequestDTO;
 import com.dan.employeemanagementsystem.dto.EmployeeResponseDTO;
+import com.dan.employeemanagementsystem.dto.PaginatedResponseDTO;
 import com.dan.employeemanagementsystem.entity.Department;
 import com.dan.employeemanagementsystem.entity.Employee;
 import com.dan.employeemanagementsystem.mapper.EmployeeMapper;
 import com.dan.employeemanagementsystem.repository.EmployeeRepository;
 import jakarta.transaction.Transactional;
+import org.springframework.data.domain.Sort;
 import org.springframework.http.HttpStatus;
 import org.springframework.stereotype.Service;
 import org.springframework.web.server.ResponseStatusException;
 
 import java.util.List;
 import lombok.extern.slf4j.Slf4j;
+import org.springframework.data.domain.Page;
+import org.springframework.data.domain.PageRequest;
+import org.springframework.data.domain.Pageable;
 
 @Slf4j
 @Service
@@ -51,7 +56,7 @@ public class EmployeeService {
         }
     }
 
-    private void validateEmailUpdate(String newEmail, String currentEmail) {
+    private void validateEmailUpdate(String currentEmail, String newEmail) {
         log.debug("Validating email update from {} to {}", currentEmail, newEmail);
         if (!newEmail.equals(currentEmail) && employeeRepository.existsByEmail(newEmail)) {
             log.error("Email update failed, new email already taken: {}", newEmail);
@@ -86,7 +91,7 @@ public class EmployeeService {
     public EmployeeResponseDTO updateEmployee(int employeeId, EmployeeRequestDTO dto) {
         log.info("Updating employee with ID: {}", employeeId);
         Employee employee = getEmployeeById(employeeId);
-        validateEmailUpdate(dto.getEmail(), employee.getEmail());
+        validateEmailUpdate(employee.getEmail(), dto.getEmail());
         Department department = departmentService.getDepartmentById(dto.getDepartmentId());
         Employee manager = getManagerById(dto.getManagerId());
         EmployeeMapper.updateEntityFromDTO(employee, dto, department, manager);
@@ -96,13 +101,18 @@ public class EmployeeService {
     }
 
     // Get all Employees
-    public List<EmployeeResponseDTO> getEmployees() {
-        log.info("Fetching all employees");
-        List<Employee> employees = employeeRepository.findAll();
-        log.debug("Fetched {} employees", employees.size());
-        return employees.stream()
+    public PaginatedResponseDTO<EmployeeResponseDTO> getEmployees(int page, int size, String sortBy, String direction) {
+        log.info("Fetching employees for page: {} with size: {}", page, size);
+        Sort sort = direction.equalsIgnoreCase("desc") ? Sort.by(sortBy).descending() : Sort.by(sortBy).ascending();
+        Pageable pageable = PageRequest.of(page, size, sort);
+        Page<Employee> employeePage = employeeRepository.findAll(pageable);
+        log.debug("Fetched {} employees on page {}. Total employees: {}",
+                employeePage.getNumberOfElements(), page, employeePage.getTotalElements());
+        List<EmployeeResponseDTO> employeeDTOs =  employeePage.getContent().stream()
                 .map(EmployeeMapper::convertToDTO)
                 .toList();
+        return new PaginatedResponseDTO<>(employeeDTOs, employeePage.getNumber(), employeePage.getSize(),
+                employeePage.getTotalElements(), employeePage.getTotalPages());
     }
 
     // Delete Employee

@@ -4,6 +4,8 @@ import com.dan.employeemanagementsystem.dto.LeaveRequestResponseDTO;
 import com.dan.employeemanagementsystem.entity.LeaveRequest;
 import com.dan.employeemanagementsystem.enums.LeaveStatus;
 import com.dan.employeemanagementsystem.enums.LeaveType;
+import org.springframework.data.domain.Page;
+import org.springframework.data.domain.Pageable;
 import org.springframework.data.jpa.repository.JpaRepository;
 import org.springframework.data.jpa.repository.Query;
 import org.springframework.data.repository.query.Param;
@@ -20,7 +22,7 @@ public interface LeaveRequestRepository extends JpaRepository<LeaveRequest, Inte
             "FROM LeaveRequest l " +
             "WHERE (:type IS NULL OR l.leaveType = :type) " +
             "AND (:status IS NULL OR l.leaveStatus = :status)")
-    List<LeaveRequestResponseDTO> findByOptionalTypeAndStatus(@Param("type") LeaveType type, @Param("status") LeaveStatus status);
+    Page<LeaveRequestResponseDTO> findByOptionalTypeAndStatus(@Param("type") LeaveType type, @Param("status") LeaveStatus status, Pageable pageable);
     // Find Leave Requests by Employee ID
     @Query("SELECT new com.dan.employeemanagementsystem.dto.LeaveRequestResponseDTO(" +
             "l.id, l.employee.id, CONCAT(l.employee.firstName, ' ', l.employee.lastName), " +

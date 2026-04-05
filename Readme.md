@@ -69,7 +69,7 @@ A Spring Boot HR management system providing REST endpoints for employee, depart
 
 ## 📦 Setup & Run
 
-Clone the repository:
+Clone the repository and enter the folder:
 git clone https://github.com/danmuras95/employee-management-system.git
 
 cd employee-management-system

@@ -3,13 +3,23 @@
 A Spring Boot HR management system providing REST endpoints for employee, department, and leave request management, featuring validation, layered architecture, business rules, and unit-tested services.
 
 ## Features
+
 - Manage employees, departments, and leave requests
 - Full CRUD operations for all entities
-- Filtering endpoints (e.g., leave requests by type or status)
+- Pagination support for large datasets (`page`, `size`, `sort`)
+- Filtering (e.g., leave requests by type and status)
 - Input validation to ensure data integrity
+## Technical Highlights
+
 - Global exception handling with meaningful HTTP responses
-- Unit tests for service layer using Mockito
-- Comprehensive logging for tracking application flow and errors
+- Unit-tested service layer using Mockito
+- Structured logging for monitoring and debugging
+## Deployment & Environment
+
+- Containerized application using Docker
+- Multi-container setup with Docker Compose (Spring Boot + PostgreSQL)
+- Isolated environment ensuring consistent setup across machines
+- Persistent database storage using Docker volumes
 
 ## Tech Stack
 - Java
@@ -32,7 +42,7 @@ A Spring Boot HR management system providing REST endpoints for employee, depart
 ## API Endpoints (examples)
 
 ### Employee
-- `GET /employees`
+- `GET /employees?page=0&size=10`
 - `GET /employees/{employeeId}`
 - `POST /employees`
 - `PUT /employees/{employeeId}`
@@ -57,12 +67,31 @@ A Spring Boot HR management system providing REST endpoints for employee, depart
 - Mockito used for mocking dependencies
 - Covers both success and error scenarios
 
-## Setup & Run
-1. Clone the repository:
-   git clone https://github.com/danmuras95/employee-management-system.git
-2. Configure the database in `application.yml`
-3. Run the application:
-   mvn spring-boot:run
+## 📦 Setup & Run
+
+Clone the repository:
+git clone https://github.com/danmuras95/employee-management-system.git
+
+cd employee-management-system
+
+Docker (Recommended):
+
+docker-compose up --build
+- Uses application-docker.yml
+- Starts both app and PostgreSQL containers
+- Database is automatically populated using data.sql
+- App runs at: http://localhost:8080
+
+Local Development (PostgreSQL on your machine):
+
+mvn clean package
+
+mvn spring-boot:run -Dspring-boot.run.profiles=local
+
+- Ensure PostgreSQL is running locally
+- Configure credentials in application-local.yml
+- App runs at: http://localhost:8080
+
 
 ## Sample API Requests
 

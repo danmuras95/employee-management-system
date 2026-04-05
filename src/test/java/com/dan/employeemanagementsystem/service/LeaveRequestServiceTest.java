@@ -17,6 +17,8 @@ import org.springframework.data.domain.PageImpl;
 import org.springframework.data.domain.PageRequest;
 import org.springframework.data.domain.Pageable;
 import org.springframework.web.server.ResponseStatusException;
+
+import java.time.LocalDate;
 import java.util.Optional;
 import static org.junit.jupiter.api.Assertions.*;
 import static org.mockito.Mockito.when;
@@ -100,6 +102,7 @@ class LeaveRequestServiceTest {
         LeaveRequest saved = new LeaveRequest();
         saved.setEmployee(employee);
 
+        when(leaveRequestRepository.existsOverlappingLeave(anyInt(), any(), any())).thenReturn(false);
         when(employeeService.getEmployeeById(1)).thenReturn(employee);
         when(leaveRequestRepository.save(any(LeaveRequest.class))).thenReturn(saved);
 
@@ -110,10 +113,30 @@ class LeaveRequestServiceTest {
         verify(leaveRequestRepository).save(any(LeaveRequest.class));
     }
 
+    @Test
+    void createLeaveRequest_shouldThrowException_whenOverlapExists() {
+        Employee employee = new Employee();
+        employee.setId(1);
+
+        LeaveRequestRequestDTO dto = new LeaveRequestRequestDTO();
+        dto.setEmployeeId(1);
+
+        when(employeeService.getEmployeeById(1)).thenReturn(employee);
+
+        when(leaveRequestRepository.existsOverlappingLeave(anyInt(), any(), any())).thenReturn(true);
+
+        assertThrows(IllegalArgumentException.class, () ->
+                leaveRequestService.createLeaveRequest(dto)
+        );
+
+        verify(leaveRequestRepository, never()).save(any());
+    }
+
     // ---------------------- UPDATE ----------------------
     @Test
     void updateLeaveRequest_success() {
         LeaveRequest existing = new LeaveRequest();
+        existing.setId(1);
         existing.setLeaveStatus(LeaveStatus.PENDING);
 
         Employee employee = new Employee();
@@ -121,8 +144,12 @@ class LeaveRequestServiceTest {
         existing.setEmployee(employee);
 
         LeaveRequestRequestDTO dto = new LeaveRequestRequestDTO();
+        dto.setEmployeeId(1);
+        dto.setStartDate(LocalDate.now());
+        dto.setEndDate(LocalDate.now().plusDays(5));
 
         when(leaveRequestRepository.findById(1)).thenReturn(Optional.of(existing));
+        when(leaveRequestRepository.existsOverlappingLeaveForUpdate(anyInt(), anyInt(), any(), any())).thenReturn(false);
         when(leaveRequestRepository.save(existing)).thenReturn(existing);
 
         LeaveRequestResponseDTO result = leaveRequestService.updateLeaveRequest(1, dto);
@@ -130,6 +157,31 @@ class LeaveRequestServiceTest {
         assertNotNull(result);
         verify(leaveRequestRepository).findById(1);
         verify(leaveRequestRepository).save(existing);
+    }
+
+    @Test
+    void updateLeaveRequest_shouldThrowException_whenOverlapExists() {
+        LeaveRequest existing = new LeaveRequest();
+        existing.setId(1);
+        existing.setLeaveStatus(LeaveStatus.PENDING);
+
+        Employee employee = new Employee();
+        employee.setId(1);
+        existing.setEmployee(employee);
+
+        LeaveRequestRequestDTO dto = new LeaveRequestRequestDTO();
+        dto.setEmployeeId(1);
+        dto.setStartDate(LocalDate.now());
+        dto.setEndDate(LocalDate.now().plusDays(5));
+
+        when(leaveRequestRepository.findById(1)).thenReturn(Optional.of(existing));
+        when(leaveRequestRepository.existsOverlappingLeaveForUpdate(anyInt(), anyInt(), any(), any())).thenReturn(true);
+
+        assertThrows(IllegalArgumentException.class, () ->
+                leaveRequestService.updateLeaveRequest(1, dto)
+        );
+
+        verify(leaveRequestRepository, never()).save(any());
     }
 
     // ---------------------- CANCEL ----------------------

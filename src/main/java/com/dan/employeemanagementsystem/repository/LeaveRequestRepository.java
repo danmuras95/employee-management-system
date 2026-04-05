@@ -31,4 +31,20 @@ public interface LeaveRequestRepository extends JpaRepository<LeaveRequest, Inte
     List<LeaveRequestResponseDTO> findByEmployeeId(@Param("employeeId") Integer employeeId);
     // Find Leave Requests between Start Date and End Date
     List<LeaveRequest> findByStartDateBetween(LocalDate start, LocalDate end);
+    // Check if Leave Requests overlap
+    @Query("SELECT COUNT(l) > 0 FROM LeaveRequest l " +
+            "WHERE l.employee.id = :employeeId " +
+            "AND l.leaveStatus = 'APPROVED' " +
+            "AND l.startDate <= :endDate " +
+            "AND l.endDate >= :startDate")
+    boolean existsOverlappingLeave(@Param("employeeId") Integer employeeId, @Param("startDate") LocalDate startDate, @Param("endDate") LocalDate endDate);
+    // Check if Leave Requests overlap on update
+    @Query("SELECT COUNT(l) > 0 FROM LeaveRequest l " +
+            "WHERE l.employee.id = :employeeId " +
+            "AND l.leaveStatus = 'APPROVED' " +
+            "AND l.id <> :leaveId " +
+            "AND l.startDate <= :endDate " +
+            "AND l.endDate >= :startDate")
+    boolean existsOverlappingLeaveForUpdate(@Param("leaveId") Integer leaveId, @Param("employeeId") Integer employeeId,
+                                            @Param("startDate") LocalDate startDate, @Param("endDate") LocalDate endDate);
 }

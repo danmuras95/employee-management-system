@@ -72,6 +72,13 @@ public class LeaveRequestService {
     public LeaveRequestResponseDTO createLeaveRequest(LeaveRequestRequestDTO dto) {
         log.info("Creating leave request for employee ID: {}", dto.getEmployeeId());
         Employee employee = employeeService.getEmployeeById(dto.getEmployeeId());
+        boolean overlap = leaveRequestRepository.existsOverlappingLeave(employee.getId(), dto.getStartDate(), dto.getEndDate());
+
+        if (overlap) {
+            throw new IllegalArgumentException(
+                    "Cannot create leave request: overlaps with an existing approved leave"
+            );
+        }
         LeaveRequest leaveRequest = LeaveRequestMapper.convertToEntity(dto, employee);
         LeaveRequest savedLeaveRequest = leaveRequestRepository.save(leaveRequest);
         log.info("Leave request created with ID: {}", savedLeaveRequest.getId());
@@ -83,6 +90,16 @@ public class LeaveRequestService {
     public LeaveRequestResponseDTO updateLeaveRequest(int leaveRequestId, LeaveRequestRequestDTO dto) {
         log.info("Updating leave request with ID: {}", leaveRequestId);
         LeaveRequest leaveRequest = getLeaveRequestById(leaveRequestId);
+
+        boolean overlap = leaveRequestRepository.existsOverlappingLeaveForUpdate(leaveRequest.getId(),
+                dto.getEmployeeId(), dto.getStartDate(), dto.getEndDate());
+
+        if (overlap) {
+            throw new IllegalArgumentException(
+                    "Cannot update leave request: overlaps with an existing approved leave"
+            );
+        }
+
         LeaveRequestMapper.updateEntityFromDTO(leaveRequest, dto);
         LeaveRequest updatedLeaveRequest = leaveRequestRepository.save(leaveRequest);
         log.info("Leave request updated with ID: {}", updatedLeaveRequest.getId());

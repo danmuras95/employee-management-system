@@ -1,7 +1,7 @@
 # Employee Management System
 
 A Spring Boot HR management system providing REST endpoints for employee, department, and leave request management.  
-It follows a layered architecture and includes validation, business rules, DTO mapping, and unit testing.
+It follows a layered architecture including validation, business rules, DTO mapping and unit testing with mockito.
 
 ---
 
@@ -12,6 +12,14 @@ It follows a layered architecture and includes validation, business rules, DTO m
 - Pagination support (`page`, `size`, `sort`)
 - Filtering (e.g., leave requests by type and status)
 - Input validation to ensure data integrity
+
+---
+
+## Business rules
+
+- Preventing overlapping leave requests
+- Enforcing data integrity (unique email, valid salary constraints)
+- Manager-subordinate relationship validation
 
 ---
 
